@@ -1,0 +1,104 @@
+<?php 
+foreach($_POST as $key=>$value)
+{
+if((strpos($value, '<') !== FALSE) or (strpos($value, '/') !== FALSE) or (strpos($value, 'ransisco') !== FALSE))
+{
+echo "Don't fuck around...  XSS and San Fransisco won't work...";
+exit;
+}//end of else if
+else
+{
+$postdata[$key]=$value; //$postdata['email'],$postdata['uid']
+}//end of else	
+}//end of foreach
+if((strpos($postdata['email'], '@')) == False)
+{
+echo "<center><p class='lead' style='color:#3498db;'>The email-id entered is invalid. Please try again.</p></center>";
+exit;
+}
+require_once('connect.php');//connecting to the server
+?>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <title>reDEFINE MUN</title>
+  <meta name="keywords" content="reDEFINE, mun, kiit">
+  <meta name="description" content="reDEFINE MUN">
+  <meta name="author" content="Sushant Sagar">
+	<!-- <meta class="viewport" name="viewport" content="width=device-width, initial-scale=1.0">--> <!--change-->
+  <meta name="viewport" content="width=device-width, initial-scale=1 , maximum-scale=1, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+	<!-- Favicon -->
+  <link rel="shortcut icon" href="img/fav.png">
+	
+    <!-- css references -->
+     <link href="css1/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+	<link href="css1/bootstrap-theme.min.css" rel="stylesheet" type="text/css"/>
+	
+	<!-- using this script to make the ajax work-->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+<br>
+<br>
+
+<div class="row">
+
+<div class="col-md-3"> </div>
+<div class="col-md-6"> 
+
+<center>
+<?php
+//primary is uid
+
+	$query = "INSERT INTO inp( name,email,gender,college,contact,exp,pos,city,state,msg ) VALUES( :name, :email, :gender, :college, :contact, :exp, :pos, :city, :state, :msg )";
+	$sth = $dbh->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+	$excute=$sth->execute(array( ':name' => $postdata['name'],':email' => $postdata['email'], ':gender' => $postdata['gender'], ':college' => $postdata['college'], ':contact'=>$postdata['contact'], ':exp'=>$postdata['exp'], ':pos'=> $postdata['pos'], ':city'=>$postdata['city'], ':state'=>$postdata['state'], ':msg'=>$postdata['msg']));
+	if(! $excute )
+	{
+	exit;
+	}
+	
+	echo "<p class='lead'  style='color:#3498db;'> Thank you ".$postdata['name']." for registering with reDEFINE MUN!</p><br/>";
+	echo "<p class='lead'  style='color:#3498db;'> You will also receive an auto-generated e-mail from our side confirming your application.</p>";
+	echo "<h5 style='color:#3498db;'>In case you do not have any email from our side, check your spam inbox or get in touch with us.</h5>";
+	
+	$email_message = "";
+	$email_message .= "Dear ".$postdata['name'].",\n\n"; //dear name,
+	$email_message .= "Thank you ".$postdata['name']." for registering with reDEFINE MUN!!\n";
+    $email_message .= "As an when the allotment is released, you'll get an email from our side.\n";
+	$email_message .= "We hope to see you in reDEFINE MUN!\n\n";
+	$email_message .= "Best Regards\n";
+	$email_message .= "Secretariat reDEFINE MUN 2015\n";
+	
+
+	 $to = $postdata['email'] ;
+     $subject = "Confirmation of Regsitration";
+     $headers = "From: reDEFINE MUN <contact@redefineinc.in>\r\n";
+    $header .= "Reply-To: contact@redefineinc.in \r\n";
+    $header .= "MIME-Version: 1.0\r\n";
+    $header .= "Content-Type: text/html; charset=iso-8859-1" . "\r\n";
+
+
+     if(! (mail($to, $subject, $email_message, $headers,"-f contact@redefineinc.in")))
+	{
+		$query = "UPDATE inp SET error = :value WHERE email=:email"; //update the event table corresponding to the event registered
+		$sth = $dbh->prepare($query, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+		$excute=$sth->execute(array(':value'=> '1' ,':email'=>$postdata['email']));
+	}
+?>
+</center>
+
+</div>
+<div class="col-md-3"> </div>
+
+</div>
+</div>
+
+
+</body>
+</html>
